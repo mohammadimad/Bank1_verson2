@@ -402,89 +402,74 @@ double Changewidthdraw(sClient Clients, double Number) {
 	Clients.AccountBalance -= Number;
 	return Clients.AccountBalance;
 }
-bool DeositClientByAccountNumber(string AccountNumber, vector <sClient>& vClients) {
-	sClient Clients;
-	double Number = 0;
-	char x = 'n';
-	if (FindClientByAccountNumber(Clients, AccountNumber, vClients) == true) {
-		cout << "The following are the client details: \n";
-		cout << "------------------------\n";
-		PrintRecord(Clients);
-		cout << "------------------------\n";
-		cout << "Please enter widthdraw amount? ";
-		cin >> Number;
-		cout << "Are you sure you perfrom this transaction y/n ";
-		cin >> x;
-		if (towupper(x) == 'Y') {
-			for (sClient& C : vClients) {
-				if (C.AccountNumber == AccountNumber) {
-					C.AccountBalance = ChangeDeposit(Clients, Number);
-					break;
-				}
+bool DeositClientByAccountNumber(string AccountNumber, vector <sClient>& vClients, double Amount)
+{
+	char Answer = 'n';
+	cout << "\n\nAre you sure you want perfrom this transaction? y/n ? ";
+	cin >> Answer;
+	if (Answer == 'y' || Answer == 'Y')
+	{
+
+		for (sClient& C : vClients)
+		{
+			if (C.AccountNumber == AccountNumber)
+			{
+				C.AccountBalance += Amount;
+				SaveCleintsDataToFile(ClientsFileName, vClients);
+				cout << "\n\nDone Successfully. New balance is: " << C.AccountBalance;
+
+				return true;
 			}
-			SaveCleintsDataToFile(ClientsFileName, vClients);
-			cout << "\nDone Successfully .";
-			return true;
 		}
-	}
-	else {
-		cout << "Client with Account Number (" << AccountNumber << ") is Not Found!\n";
 		return false;
 	}
 }
+
 void ShowDeositScreen() {
+	sClient Client;
 	cout << "\n----------------------\n";
 	cout << "\tDeosit Screen";
 	cout << "\n-----------------------\n";
 	vector <sClient> vClients = LoadClientsDataFromFile(ClientsFileName);
 	string AccountNumber = ReadAccountNumber();
-	DeositClientByAccountNumber(AccountNumber, vClients);
-}
-bool WithdrawClientByAccountNumber(string AccountNumber, vector <sClient>& vClients) {
-	sClient Clients;
-	double Number = 0;
-	char x = 'n';
-	if (FindClientByAccountNumber(Clients, AccountNumber, vClients) == true) {
-		cout << "The following are the client details: \n";
-		cout << "------------------------\n";
-		PrintRecord(Clients);
-		cout << "------------------------\n";
-	Loop: cout << "\nPlease enter deopsite amount? ";
-		cin >> Number;
-		cout << "Are you sure you perfrom this transaction y/n ";
-		cin >> x;
-		if (towupper(x) == 'Y') {
-			for (sClient& C : vClients) {
-				if (C.AccountNumber == AccountNumber) {
-					if (Number <= C.AccountBalance) {
-						C.AccountBalance = Changewidthdraw(Clients, Number);
-						break;
-					}
-					else {
-						cout << "Amount Exceeds the balace, you can withdraw up to : " << Number;
-						goto Loop;
-					}
-				}
-			}
-			SaveCleintsDataToFile(ClientsFileName, vClients);
-			cout << "\n\Done Successfully .";
-			return true;
-		}
+	while (!FindClientByAccountNumber(Client, AccountNumber, vClients))
+	{
+		cout << "\nClient with [" << AccountNumber << "] does not exist.\n";
+		AccountNumber = ReadAccountNumber();
 	}
-	else {
-		cout << "Client with Account Number (" << AccountNumber << ") is Not Found!\n";
-		return false;
-	}
-		
-	
+	PrintRecord(Client);
+
+	double Amount = 0;
+	cout << "\nPlease enter deposit amount? ";
+	cin >> Amount;
+	DeositClientByAccountNumber(AccountNumber, vClients, Amount);
 }
+
 void ShowWithdrawScreen() {
+	sClient Client;
 	cout << "\n----------------------\n";
 	cout << "\tWithdraw Screen";
 	cout << "\n-----------------------\n";
 	vector <sClient> vClients = LoadClientsDataFromFile(ClientsFileName);
 	string AccountNumber = ReadAccountNumber();
-	WithdrawClientByAccountNumber(AccountNumber, vClients);
+	while (!FindClientByAccountNumber(Client, AccountNumber, vClients))
+	{
+		cout << "\nClient with [" << AccountNumber << "] does not exist.\n";
+		AccountNumber = ReadAccountNumber();
+	}
+	PrintRecord(Client);
+
+	double Amount = 0;
+	cout << "\nPlease enter deposit amount? ";
+	cin >> Amount;
+	while (Amount > Client.AccountBalance)
+	{
+		cout << "\nAmount Exceeds the balance, you can withdraw up to : " << Client.AccountBalance << endl;
+		cout << "Please enter another amount? ";
+		cin >> Amount;
+	}
+
+	DeositClientByAccountNumber(AccountNumber, vClients, Amount * -1);
 }
 void PrintClientRecord2(sClient Client) {
 	cout << "| " << left << setw(15) << Client.AccountNumber;
